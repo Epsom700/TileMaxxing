@@ -4,6 +4,7 @@
 #include <limits>
 #include <cmath>
 #include <random>
+#include <cassert>
 using namespace std;
 
 MCTS::MCTS(int simulation) : simulation_(simulation), gen_(random_device{}()) {
@@ -23,6 +24,29 @@ double MCTS::ucb1(chanceNode* root){
     return value; 
 
 }
+
+
+pair<int, pair<int, int>> MCTS::sampleTile(const int board[4][4]){
+    vector<pair<int, int>> zero_track; 
+    for (int i = 0; i < 4; ++i){
+        for (int j=0; j<4; ++j){
+            if (board[i][j] == 0) {
+                zero_track.push_back({i, j});
+            }
+        }
+    }
+    assert(!zero_track.empty()); // Return a default tile value and position if no empty cells are found
+    int len_track_loop = zero_track.size(); 
+    discrete_distribution<int> distr_2({90, 10}); 
+    uniform_int_distribution<int> distr(0, len_track_loop-1);
+    int index = distr(gen_);
+    pair<int, int> cell =zero_track[index]; 
+    int tile = (distr_2(gen_) == 0) ? 2 : 4; 
+    pair<int, pair<int, int>> tile_val_pos = {tile, cell};
+    return tile_val_pos;
+    
+}
+
 pair<MCTS::decisionNode*, MCTS::chanceNode*> MCTS::select(decisionNode* root){
     decisionNode* track = root; 
     while ((!track->child.empty())&&(track->is_terminal==false)){
@@ -35,22 +59,7 @@ pair<MCTS::decisionNode*, MCTS::chanceNode*> MCTS::select(decisionNode* root){
                 best_node = c; 
             }
         }
-
-        vector<pair<int, int>> zero_track; 
-        auto& b = best_node->board;
-        for (int i = 0; i< 4; ++i){
-            for (int j=0; j<4;++j){
-                if (b[i][j]==0) zero_track.push_back({i, j}); 
-            }
-        }
- 
-        int len_track_loop = zero_track.size(); 
-        discrete_distribution<int> distr_2({90, 10}); 
-        uniform_int_distribution<int> distr(0, len_track_loop-1);
-        int index = distr(gen_);
-        pair<int, int> cell =zero_track[index]; 
-        int tile = (distr_2(gen_) == 0) ? 2 : 4; 
-        pair<int, pair<int, int>> tile_val_pos = {tile, cell};
+        auto tile_val_pos = sampleTile(best_node->board);
         auto it = best_node->children.find(tile_val_pos); 
         if (it != best_node->children.end()){
             track = it->second; 
@@ -93,8 +102,35 @@ MCTS::chanceNode* MCTS::createChanceNode(decisionNode* parent, int move, const i
 
 }
 
-MCTS::decisionNode* MCTS::expand(pair<decisionNode*, chanceNode*> frontier){
 
+MCTS::decisionNode* MCTS::expand(pair<decisionNode*, chanceNode*> frontier){
+    if (frontier.second != nullptr){
+        return createDecisionNode(frontier.second, last_sampled_key_); 
+    }else if (frontier.first->is_terminal && frontier.second == nullptr){
+        return frontier.first; 
+    }
+    vector<chanceNode*> legal_moves;
+    for (int move_ = 0; move_ < 4; ++move_){
+        Board temp; 
+        memcpy(temp.board, frontier.first->board, sizeof(temp.board));
+        switch (move_){
+            case 0: temp.swipeLeft(); break;
+            case 1: temp.swipeRight(); break;
+            case 2: temp.swipeUP(); break;
+            case 3: temp.swipeDown(); break;    
+        }
+        if (memcmp(temp.board, frontier.first->board, sizeof(temp.board))!=0){
+            legal_moves.push_back(createChanceNode(frontier.first, move_, temp.board));
+        }
+    }
+    if (legal_moves.empty()) {
+        frontier.first->is_terminal = true;   // mark it so future select() catches this
+        return frontier.first;
+    }
+    uniform_int_distribution<int> distr(0, legal_moves.size() - 1);
+    chanceNode* selected_move = legal_moves[distr(gen_)];
+    auto tile_val_pos = sampleTile(selected_move->board);
+    return createDecisionNode(selected_move, tile_val_pos);
 }
 
 

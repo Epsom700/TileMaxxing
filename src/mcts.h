@@ -38,5 +38,6 @@ class MCTS{
         chanceNode* createChanceNode(decisionNode* parent, int move, const int board_after_move[4][4]);  
         double ucb1(chanceNode* root); 
         std::mt19937 gen_;
+        std::pair<int, std::pair<int, int>> sampleTile(const int board[4][4]);
         std::pair<int, std::pair<int, int>> last_sampled_key_; 
 };
