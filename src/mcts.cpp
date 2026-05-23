@@ -133,7 +133,110 @@ MCTS::decisionNode* MCTS::expand(pair<decisionNode*, chanceNode*> frontier){
     return createDecisionNode(selected_move, tile_val_pos);
 }
 
+bool MCTS::applyRandomMove(Board& b){
+    vector<int> legal;
+    for (int move = 0; move < 4; ++move){
+        Board temp;
+        memcpy(temp.board, b.board, sizeof(temp.board));
+        temp.score = 0;
 
+        switch (move){
+            case 0: temp.swipeLeft(); break;
+            case 1: temp.swipeRight(); break;
+            case 2: temp.swipeUP(); break;
+            case 3: temp.swipeDown(); break;
+        }
+
+        bool changed = false;
+        for (int i = 0; i < 4 && !changed; ++i){
+            for (int j = 0; j < 4 && !changed; ++j){
+                if (temp.board[i][j] != b.board[i][j]) changed = true;
+            }
+        }
+
+        if (changed) legal.push_back(move);
+    }
+
+    if (legal.empty()) return false;
+
+    uniform_int_distribution<int> distr(0, (int)legal.size() - 1);
+    int pick = legal[distr(gen_)];
+
+    switch (pick){
+        case 0: b.swipeLeft(); break;
+        case 1: b.swipeRight(); break;
+        case 2: b.swipeUP(); break;
+        case 3: b.swipeDown(); break;
+    }
+
+    return true;
+}
+
+double MCTS::rollout(decisionNode* start){
+    if (start->is_terminal) return 0.0;
+
+    Board temp;
+    memcpy(temp.board, start->board, sizeof(temp.board));
+    temp.score = 0;
+
+    while (true){
+        if (!applyRandomMove(temp)) break;
+        temp.spawnTile();
+    }
+
+    return (double)temp.score;
+}
+
+
+void MCTS::backprop(decisionNode* dn, double rollout_value) {
+    while (dn != nullptr) {
+        dn->visit_counter++;
+        dn->total_score += rollout_value;
+        chanceNode* cn = dn->parent;
+        if (cn == nullptr) return;
+        cn->visit_counter++;
+        cn->total_score += rollout_value;
+        dn = cn->parent;
+    }
+}
+void MCTS::deleteTrees(decisionNode* root){
+    if (root == nullptr) return;
+    for (auto* c : root->child){
+        for (auto& kv : c->children){
+            deleteTrees(kv.second);
+        }
+        delete c;
+    }
+    delete root;
+}
 int MCTS::getBestMove(Board& board){
-    
+    decisionNode* root = new decisionNode;
+    memcpy(root->board, board.board, sizeof(root->board));
+    root->parent = nullptr;
+    root->tile_val = -1;
+    root->tile_pos = {-1, -1};
+    root->visit_counter = 0;
+    root->total_score = 0;
+
+    Board temp;
+    memcpy(temp.board, board.board, sizeof(temp.board));
+    root->is_terminal = temp.isGameOver();
+    assert(!root->is_terminal);
+    for (int i = 0; i < simulation_; ++i) {
+        auto frontier = select(root);
+        decisionNode* leaf = expand(frontier);
+        double v = rollout(leaf);
+        backprop(leaf, v);
+    }
+    int best_move = -1;
+    int best_visits = -1;
+    for (auto* c : root->child){
+        if (c->visit_counter > best_visits){
+            best_visits = c->visit_counter;
+            best_move = c->move;
+        }
+    }
+    assert(best_move != -1);
+    deleteTrees(root);
+    return best_move;
 }

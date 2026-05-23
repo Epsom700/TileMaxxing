@@ -31,12 +31,15 @@ class MCTS{
 
     private: 
         int simulation_; 
+        double ucb1(chanceNode* root); 
         void deleteTrees(decisionNode* root);  
         std::pair<decisionNode*, chanceNode*> select(decisionNode* root);  
         decisionNode* expand(std::pair<decisionNode*, chanceNode*> node); 
         decisionNode* createDecisionNode(chanceNode* parent, std::pair<int, std::pair<int, int>> tile_val_pos);
         chanceNode* createChanceNode(decisionNode* parent, int move, const int board_after_move[4][4]);  
-        double ucb1(chanceNode* root); 
+        void backprop(decisionNode* leaf, double score);
+        bool applyRandomMove(Board& b);
+        double rollout(decisionNode* start);
         std::mt19937 gen_;
         std::pair<int, std::pair<int, int>> sampleTile(const int board[4][4]);
         std::pair<int, std::pair<int, int>> last_sampled_key_; 
