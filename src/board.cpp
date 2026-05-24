@@ -52,7 +52,7 @@ void Board::swipeRow(int rows[4], int final_row[4]){
         if (i==0) continue;
         if ((write_index > 0) && (final_row[write_index-1] == i) && (merged == false)){
             final_row[write_index-1] += i; 
-            score +=i; 
+            score +=2*i; 
             merged=true; 
         }else{
             final_row[write_index] = i; 
