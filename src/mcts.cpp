@@ -19,9 +19,12 @@ double MCTS::ucb1(chanceNode* root){
     int vi = root->visit_counter; 
     double total_score = root->total_score; 
     int parent_visit = root->parent->visit_counter; 
-    double c = 1000.0;
+    
+    // Dynamic exploration scaling: Keep C proportional to the average score magnitude
+    double avg_score = total_score / vi;
+    double c = std::max(100.0, 0.1 * avg_score);
 
-    double value = (total_score/vi) + c * sqrt(log(parent_visit)/vi); 
+    double value = avg_score + c * sqrt(log(parent_visit)/vi); 
     return value; 
 
 }
@@ -214,8 +217,27 @@ bool MCTS::applyHeuristicMove(Board& b){
 double MCTS::rollout(decisionNode* start){
     if (start->is_terminal) return 0.0;
 
-    if (net_)
-        return (double)net_->evaluate(start->board);
+    if (net_) {
+        // Hybrid Rollout: Run heuristic for a short horizon (8 steps) to resolve local tacticals,
+        // then evaluate the final state using the value network.
+        Board temp;
+        memcpy(temp.board, start->board, sizeof(temp.board));
+        temp.score = 0;
+        
+        int steps = 0;
+        const int MAX_HYBRID_STEPS = 8;
+        while (steps < MAX_HYBRID_STEPS) {
+            if (!applyHeuristicMove(temp)) break;
+            temp.spawnTile();
+            steps++;
+        }
+        
+        double val = (double)temp.score;
+        if (!temp.isGameOver()) {
+            val += (double)net_->evaluate(temp.board);
+        }
+        return val;
+    }
 
     Board temp;
     memcpy(temp.board, start->board, sizeof(temp.board));
