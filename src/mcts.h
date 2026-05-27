@@ -6,8 +6,9 @@
 class MCTS{
     public: 
         MCTS(int simulation_);
-        enum Directions {left = 0, right, up, down}; 
-        int getBestMove(Board& board); 
+        enum Directions {left = 0, right, up, down};
+        struct MoveResult { int move; double eval; };
+        MoveResult getBestMove(Board& board);
         struct chanceNode; 
         struct decisionNode
         {
@@ -40,7 +41,9 @@ class MCTS{
         chanceNode* createChanceNode(decisionNode* parent, int move, const int board_after_move[4][4]);  
         void backprop(decisionNode* leaf, double score);
         bool applyRandomMove(Board& b);
+        bool applyHeuristicMove(Board& b); 
         double rollout(decisionNode* start);
+
         std::mt19937 gen_;
         std::pair<int, std::pair<int, int>> sampleTile(const int board[4][4]);
         std::pair<int, std::pair<int, int>> last_sampled_key_; 

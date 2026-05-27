@@ -1,6 +1,7 @@
 #include "mcts.h"
-#include <vector>
 #include "board.h"
+#include "heuristic.h"
+#include <vector>
 #include <limits>
 #include <cmath>
 #include <random>
@@ -18,7 +19,7 @@ double MCTS::ucb1(chanceNode* root){
     int vi = root->visit_counter; 
     double total_score = root->total_score; 
     int parent_visit = root->parent->visit_counter; 
-    double c = sqrt(2); 
+    double c = 1000.0;
 
     double value = (total_score/vi) + c * sqrt(log(parent_visit)/vi); 
     return value; 
@@ -172,6 +173,44 @@ bool MCTS::applyRandomMove(Board& b){
     return true;
 }
 
+
+bool MCTS::applyHeuristicMove(Board& b){
+    double best_score = -numeric_limits<double>::infinity(); 
+    vector<int> best_move;
+    for (int move_=0; move_ < 4; ++move_){
+        Board temp;
+        memcpy(temp.board, b.board, sizeof(temp.board));
+        temp.score = 0;
+        switch (move_){
+            case 0: temp.swipeLeft(); break;
+            case 1: temp.swipeRight(); break; 
+            case 2: temp.swipeUP(); break; 
+            case 3: temp.swipeDown(); break; 
+        }
+
+        if (memcmp(temp.board, b.board, sizeof(temp.board))){
+            double curr_score = scoreBoard(temp.board); 
+            if (curr_score > best_score){
+                best_score = curr_score; 
+                best_move.clear(); 
+                best_move.push_back(move_);
+            } else if (curr_score == best_score){
+                best_move.push_back(move_); 
+            }
+        }
+    }
+    if (best_move.empty()) return false; 
+    uniform_int_distribution<int> distr(0, (int)best_move.size() - 1);
+    int pick = best_move[distr(gen_)];
+    switch (pick){
+        case 0: b.swipeLeft(); break;
+        case 1: b.swipeRight(); break;
+        case 2: b.swipeUP(); break;
+        case 3: b.swipeDown(); break;
+    }
+    return true;  
+}
+
 double MCTS::rollout(decisionNode* start){
     if (start->is_terminal) return 0.0;
 
@@ -180,7 +219,7 @@ double MCTS::rollout(decisionNode* start){
     temp.score = 0;
 
     while (true){
-        if (!applyRandomMove(temp)) break;
+        if (!applyHeuristicMove(temp)) break;
         temp.spawnTile();
     }
 
@@ -209,7 +248,7 @@ void MCTS::deleteTrees(decisionNode* root){
     }
     delete root;
 }
-int MCTS::getBestMove(Board& board){
+MCTS::MoveResult MCTS::getBestMove(Board& board){
     decisionNode* root = new decisionNode;
     memcpy(root->board, board.board, sizeof(root->board));
     root->parent = nullptr;
@@ -237,6 +276,8 @@ int MCTS::getBestMove(Board& board){
         }
     }
     assert(best_move != -1);
+    assert(root->visit_counter > 0);
+    double eval = root->total_score / root->visit_counter;
     deleteTrees(root);
-    return best_move;
+    return {best_move, eval};
 }

@@ -31,7 +31,7 @@ int playMCTSGame(int simulations) {
     MCTS mcts(simulations);
 
     while (!b.isGameOver()) {
-        int move = mcts.getBestMove(b);
+        int move = mcts.getBestMove(b).move;
 
         // TODO 1: apply the chosen move to b, then spawn a tile.
         // Use applyMoveToBoard(b, move) and b.spawnTile().
