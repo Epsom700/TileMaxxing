@@ -7,7 +7,7 @@
 #include <string>
 
 int main(int argc, char** argv) {
-    int num_games = (argc > 1) ? std::atoi(argv[1]) : 500;
+    int num_games = (argc > 1) ? std::atoi(argv[1]) : 5;
     int simulations = (argc > 2) ? std::atoi(argv[2]) : 1000;
 
     std::filesystem::create_directories("data");

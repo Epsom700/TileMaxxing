@@ -5,7 +5,7 @@
 class NetworkInference {
 public:
     explicit NetworkInference(const std::string& model_path);
-    float evaluate(const int board[4][4]) const;
+    float evaluate(const int board[4][4]);
 
 private:
     Ort::Env env_;

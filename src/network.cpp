@@ -7,7 +7,7 @@ NetworkInference::NetworkInference(const std::string& model_path)
     : env_(ORT_LOGGING_LEVEL_WARNING, "TileMaxxing"),
       session_(env_, model_path.c_str(), Ort::SessionOptions{}) {}
 
-float NetworkInference::evaluate(const int board[4][4]) const {
+float NetworkInference::evaluate(const int board[4][4]) {
     // Build one-hot tensor: [1, 17, 4, 4] in NCHW layout
     // Channel k represents tile value 2^k; channel 0 = empty cell
     std::array<float, 17 * 4 * 4> input_data{};
