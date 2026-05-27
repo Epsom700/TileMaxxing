@@ -35,7 +35,7 @@ class TrainingLoop:
         self.val_loader = None
         self.best_val_loss = float('inf')
     
-    def load_data(self, jsonl_path="/Users/arjunsingh/Desktop/TileMaxxing_main/TileMaxxing/data/run_1779711484.jsonl"):
+    def load_data(self, jsonl_path=".data/run_1779711484.jsonl"):
         """Load and prepare data."""
         # Load all records from JSONL
         records = load_tile_data(jsonl_path)
@@ -156,7 +156,7 @@ if __name__ == "__main__":
     )
     
     print("Loading data...")
-    trainer.load_data("/Users/arjunsingh/Desktop/TileMaxxing_main/TileMaxxing/data/run_1779711484.jsonl")
+    trainer.load_data("./data/run_1779711484.jsonl")
     
     print("Setting up model...")
     trainer.setup_model()

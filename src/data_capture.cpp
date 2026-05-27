@@ -1,6 +1,7 @@
 #include "data_capture.h"
 #include "board.h"
 #include "mcts.h"
+#include "network.h"
 #include <fstream>
 #include <cstring>
 
@@ -15,9 +16,10 @@ static void writeBoardJSON(std::ofstream& f, const int board[4][4]) {
     f << "]";
 }
 
-int playAndLog(int simulations, std::ofstream& file, int game_id) {
+int playAndLog(int simulations, std::ofstream& file, int game_id,
+               NetworkInference* net) {
     Board b;
-    MCTS mcts(simulations);
+    MCTS mcts(simulations, net);
     int move_idx = 0;
 
     while (!b.isGameOver()) {

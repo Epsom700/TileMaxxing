@@ -3,9 +3,12 @@
 #include <map>
 #include <utility>
 #include "board.h"
+
+class NetworkInference;
+
 class MCTS{
-    public: 
-        MCTS(int simulation_);
+    public:
+        MCTS(int simulation_, NetworkInference* net = nullptr);
         enum Directions {left = 0, right, up, down};
         struct MoveResult { int move; double eval; };
         MoveResult getBestMove(Board& board);
@@ -45,6 +48,7 @@ class MCTS{
         double rollout(decisionNode* start);
 
         std::mt19937 gen_;
+        NetworkInference* net_;
         std::pair<int, std::pair<int, int>> sampleTile(const int board[4][4]);
-        std::pair<int, std::pair<int, int>> last_sampled_key_; 
+        std::pair<int, std::pair<int, int>> last_sampled_key_;
 };

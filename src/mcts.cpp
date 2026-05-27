@@ -1,6 +1,7 @@
 #include "mcts.h"
 #include "board.h"
 #include "heuristic.h"
+#include "network.h"
 #include <vector>
 #include <limits>
 #include <cmath>
@@ -8,9 +9,8 @@
 #include <cassert>
 using namespace std;
 
-MCTS::MCTS(int simulation) : simulation_(simulation), gen_(random_device{}()) {
-
-}
+MCTS::MCTS(int simulation, NetworkInference* net)
+    : simulation_(simulation), gen_(random_device{}()), net_(net) {}
 
 double MCTS::ucb1(chanceNode* root){
     // UCB1 = (total_score / visit_count) + C * sqrt(ln(parent_visits) / visit_count)
@@ -213,6 +213,9 @@ bool MCTS::applyHeuristicMove(Board& b){
 
 double MCTS::rollout(decisionNode* start){
     if (start->is_terminal) return 0.0;
+
+    if (net_)
+        return (double)net_->evaluate(start->board);
 
     Board temp;
     memcpy(temp.board, start->board, sizeof(temp.board));

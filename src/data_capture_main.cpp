@@ -1,4 +1,5 @@
 #include "data_capture.h"
+#include "network.h"
 #include <ctime>
 #include <filesystem>
 #include <fstream>
@@ -23,8 +24,10 @@ int main(int argc, char** argv) {
     std::cout << "writing to " << path
               << " (" << num_games << " games, " << simulations << " sims/move)\n";
 
+    NetworkInference net("./model/tile_value_net.onnx");
+
     for (int game_id = 0; game_id < num_games; ++game_id) {
-        int final_score = playAndLog(simulations, file, game_id);
+        int final_score = playAndLog(simulations, file, game_id, &net);
         file.flush();
         std::cout << "game " << game_id << " done, score " << final_score << "\n";
     }
