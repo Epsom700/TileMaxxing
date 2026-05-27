@@ -32,19 +32,15 @@ The build process compiles several executables including the main game (`tilemax
 
 ## AI Performance
 
-**High-Score Runs:**
-* game 0 done, score 62684
-* game 37 done, score 61084
-* game 50 done, score 68716
+**High-Score Runs(Value Network):**
+* Game ID 34: score 52684
+* Game ID 28, score 51084
+* Game ID 58, score 58716
 
-
-**Historical Average Benchmarks:**
-| Player              | Avg final score | vs. random |
-|---------------------|-----------------|-----------|
-| Uniform random      | 956             | 1.0x       |
-| MCTS, 100 sims/move | 8,109           | 8.5x       |
-| MCTS, 1000 sims/move| 12,273          | 12.8x      |
-
+**Highest-Score(Pure Heuristics)**
+* Game ID 103: 75,636
+* Game ID 68: 67,340
+* Game ID 54: 63,812
 
 ## How It Works (Flow Diagram)
 
@@ -78,3 +74,8 @@ graph TD
     
     %% Quit
     C -->|Q| N
+
+mermaid```
+
+
+Running v2 bootstraap right now, Let's hope I am back soon.
